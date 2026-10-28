@@ -4,6 +4,11 @@ Minesweeper where every board can be solved by logic alone. After your first cli
 solver plays the board using only the numbers; if it would ever need a guess, the board
 is rebuilt before you see it. Hints and losses explain the reasoning.
 
+**Play it:** https://vineetvsingh.github.io/minesweeper/
+
+Every push to `main` runs the tests, builds the game and deploys it to GitHub Pages
+(`.github/workflows/deploy.yml`).
+
 ## Commands
 
 ```sh
