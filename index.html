@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="claude:viewport-fit-sides" content="cover" />
+    <meta name="description" content="Minesweeper where every board can be solved by logic alone. No 50/50 guesses." />
+    <title>No-Guess Minesweeper</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22%3E%3Cpath d=%22M10 2.6v14.8M2.6 10h14.8M4.8 4.8l10.4 10.4M15.2 4.8L4.8 15.2%22 stroke=%22%23c2470a%22 stroke-width=%221.7%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2210%22 cy=%2210%22 r=%225.1%22 fill=%22%23c2470a%22/%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Martian+Mono:wght@500;700;800&family=Saira+Stencil+One&display=swap"
+    />
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <div class="top">
+          <div class="titles">
+            <p class="eyebrow">Solver-checked boards</p>
+            <h1>No-Guess <span>Minesweeper</span></h1>
+          </div>
+          <div class="tools">
+            <button type="button" class="icon-btn" id="statsBtn" aria-label="Statistics" title="Statistics">
+              <svg viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M4 16.5V10M10 16.5V4M16 16.5v-8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+              </svg>
+            </button>
+            <button type="button" class="icon-btn" id="soundBtn" aria-pressed="false" aria-label="Sound effects" title="Sound effects"></button>
+            <button type="button" class="icon-btn" id="themeBtn" aria-label="Theme"></button>
+          </div>
+        </div>
+        <p class="lede">
+          After your first click, a solver plays the board using only the numbers. If it would ever
+          need a coin flip, the board is rebuilt before you see it. You will never face a 50/50, and
+          Hint shows you the reasoning, not just the answer.
+        </p>
+      </header>
+
+      <div class="controls">
+        <div class="seg" id="diff" role="group" aria-label="Difficulty">
+          <button type="button" data-k="beginner">Beginner</button>
+          <button type="button" data-k="intermediate">Intermediate</button>
+          <button type="button" data-k="expert">Expert</button>
+          <button type="button" data-k="custom">Custom</button>
+        </div>
+        <div class="group">
+          <span class="group-lbl" id="logicLbl">Logic</span>
+          <div class="seg" id="logic" role="group" aria-labelledby="logicLbl">
+            <button type="button" data-l="any" title="Whatever the generator finds">Any</button>
+            <button type="button" data-l="gentle" title="Solvable one number at a time">Gentle</button>
+            <button type="button" data-l="tough" title="Needs several two-number patterns">Tough</button>
+          </div>
+        </div>
+      </div>
+
+      <section class="panel" aria-label="Game">
+        <!-- The HUD sticks only while its board is in view. -->
+        <div class="play">
+          <div class="hud">
+            <div class="readout">
+              <span class="lbl">Mines</span><span class="val" id="mines">010</span>
+            </div>
+            <div class="actions">
+              <button type="button" class="btn primary" id="fresh">New board</button>
+              <button type="button" class="btn" id="hint">Hint</button>
+              <button type="button" class="icon-btn" id="pause" aria-label="Pause" title="Pause (P)"></button>
+            </div>
+            <div class="readout right">
+              <span class="lbl">Time</span><span class="val" id="time">000</span>
+            </div>
+          </div>
+          <div class="stage">
+            <div class="board-scroll" id="scroll">
+              <div id="board" class="board" role="group"></div>
+            </div>
+            <div class="pause-ov" id="pauseOv" hidden>
+              <span>Paused</span>
+              <button type="button" class="btn primary" id="resume">Resume</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-row" id="statusRow">
+          <p id="status" class="status" aria-live="polite">
+            Click any square to start. The first click always opens an area.
+          </p>
+          <div class="status-btns">
+            <button type="button" class="btn" id="retry" hidden>Retry this board</button>
+            <button type="button" class="btn" id="watch" hidden>Watch replay</button>
+          </div>
+        </div>
+        <div class="replay" id="replay" hidden>
+          <button type="button" class="icon-btn" id="rpPlay" aria-label="Pause replay"></button>
+          <input type="range" id="rpSeek" min="0" max="1000" value="0" aria-label="Replay position" />
+          <span class="rp-time" id="rpTime">0.0 s</span>
+          <div class="seg" id="rpSpeed" role="group" aria-label="Replay speed">
+            <button type="button" data-s="1" aria-pressed="true">1×</button>
+            <button type="button" data-s="2" aria-pressed="false">2×</button>
+            <button type="button" data-s="4" aria-pressed="false">4×</button>
+          </div>
+          <button type="button" class="btn" id="rpClose">Close replay</button>
+        </div>
+
+        <div class="panel-foot">
+          <div class="seg" id="mode" role="group" aria-label="Tap action">
+            <button type="button" data-m="dig" aria-pressed="true">Dig</button>
+            <button type="button" data-m="flag" aria-pressed="false">Flag</button>
+          </div>
+          <div class="group">
+            <button type="button" class="btn" id="daily">Daily</button>
+            <button type="button" class="btn" id="share">Share</button>
+            <div class="zoom" role="group" aria-label="Zoom">
+              <button type="button" class="icon-btn" id="zoomOut" aria-label="Zoom out" title="Zoom out (−)">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+              </button>
+              <button type="button" class="btn" id="zoomFit" title="Fit board to width (0)">Fit</button>
+              <button type="button" class="icon-btn" id="zoomIn" aria-label="Zoom in" title="Zoom in (+)">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10M10 5v10" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <ul class="result" id="result" hidden></ul>
+      <p class="meta" id="meta">9 × 9 · 10 mines</p>
+
+      <section class="help" aria-label="How to play">
+        <div>
+          <b>No guessing</b>
+          <p>A solver checks every board using only the numbers, so logic always finds the next safe square.</p>
+        </div>
+        <div>
+          <b>Dig</b>
+          <p>Click or tap a square. In Flag mode, a tap places a flag instead.</p>
+        </div>
+        <div>
+          <b>Flag</b>
+          <p>Right-click, long-press, or press F on a focused square.</p>
+        </div>
+        <div>
+          <b>Clear around a number</b>
+          <p>Click a number once all its mines are flagged to dig every other square next to it.</p>
+        </div>
+        <div>
+          <b>Hint</b>
+          <p>Rings the numbers that prove a square is safe and explains the step. Hint-free wins count for best times.</p>
+        </div>
+        <div>
+          <b>Logic</b>
+          <p>Gentle boards fall to one number at a time. Tough boards need several steps that compare two numbers.</p>
+        </div>
+        <div>
+          <b>Daily &amp; Share</b>
+          <p>Daily gives everyone the same board each day. Share gives you a code that rebuilds any board.</p>
+        </div>
+        <div>
+          <b>Keyboard</b>
+          <p>
+            <kbd>Arrows</kbd> move, <kbd>Space</kbd> digs, <kbd>F</kbd> flags, <kbd>N</kbd> new board,
+            <kbd>H</kbd> hint, <kbd>P</kbd> pause, <kbd>R</kbd> retry, <kbd>M</kbd> dig/flag,
+            <kbd>+</kbd> <kbd>−</kbd> zoom.
+          </p>
+        </div>
+        <div>
+          <b>Phones</b>
+          <p>Pinch the board to zoom. Long-press to flag, or switch the tap action to Flag.</p>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+    <dialog id="confirmDlg" aria-labelledby="confirmTitle">
+      <form method="dialog">
+        <h2 id="confirmTitle">Leave this game?</h2>
+        <p id="confirmText"></p>
+        <div class="dlg-btns">
+          <button class="btn" value="cancel">Keep playing</button>
+          <button class="btn primary" value="ok" id="confirmOk">Leave game</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="customDlg" aria-labelledby="customTitle">
+      <form method="dialog" id="customForm">
+        <h2 id="customTitle">Custom board</h2>
+        <div class="fields">
+          <label class="field"><span>Rows</span><input id="cRows" type="number" inputmode="numeric" min="5" max="30" required /></label>
+          <label class="field"><span>Columns</span><input id="cCols" type="number" inputmode="numeric" min="5" max="40" required /></label>
+          <label class="field"><span>Mines</span><input id="cMines" type="number" inputmode="numeric" min="1" required /></label>
+        </div>
+        <p class="note" id="customNote" style="margin-top: 10px"></p>
+        <div class="dlg-btns">
+          <button class="btn" value="cancel" formnovalidate>Cancel</button>
+          <button class="btn primary" value="ok" id="customOk">Start board</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="shareDlg" aria-labelledby="shareTitle">
+      <h2 id="shareTitle">Share a board</h2>
+      <p class="note" id="shareNote"></p>
+      <div class="codebox">
+        <label class="field"><span>This board</span><input id="codeOut" readonly /></label>
+        <button type="button" class="btn" id="copyCode" style="align-self: flex-end">Copy</button>
+      </div>
+      <h3>Play a code</h3>
+      <form class="codebox" id="codeForm">
+        <label class="field"><span>Board code</span><input id="codeIn" autocomplete="off" spellcheck="false" placeholder="E-a-1x8k2p-5d" /></label>
+        <button class="btn primary" style="align-self: flex-end">Play</button>
+      </form>
+      <p class="note bad" id="codeErr" style="margin-top: 8px" hidden></p>
+      <div class="dlg-btns">
+        <button type="button" class="btn" data-close>Done</button>
+      </div>
+    </dialog>
+
+    <dialog id="statsDlg" class="wide" aria-labelledby="statsTitle">
+      <h2 id="statsTitle">Statistics</h2>
+      <div class="seg" id="statsTabs" role="group" aria-label="Difficulty">
+        <button type="button" data-k="beginner">Beginner</button>
+        <button type="button" data-k="intermediate">Intermediate</button>
+        <button type="button" data-k="expert">Expert</button>
+      </div>
+      <div id="statsBody" style="margin-top: 14px"></div>
+      <div class="dlg-btns">
+        <button type="button" class="btn" id="statsReset">Reset these stats</button>
+        <button type="button" class="btn primary" data-close>Done</button>
+      </div>
+    </dialog>
+  </body>
+</html>

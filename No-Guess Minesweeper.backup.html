@@ -1,0 +1,1477 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      html {
+        scroll-padding-top: env(safe-area-inset-top, 0px);
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        font:
+          14px -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: #fff;
+        color: #000;
+      }
+      img {
+        max-width: 100%;
+      }
+      [hidden]:not([hidden="until-found" i]) {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <title>No-Guess Minesweeper</title>
+    <meta name="claude:viewport-fit-sides" content="cover" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Martian+Mono:wght@500;700;800&family=Saira+Stencil+One&display=swap"
+    />
+    <style>
+      /* Layout: one centred column. Title block, controls row, then an instrument-plate panel holding the HUD and the minefield. */
+      :root {
+        --bg: #e4e9e1;
+        --surface: #f3f5f0;
+        --ink: #1b231d;
+        --muted: #56635a;
+        --line: #c6cfc3;
+        --field: #aebba9;
+        --tile: #8da285;
+        --tile-hi: #a8bb9f;
+        --tile-lo: #6d8266;
+        --tile-hover: #98ad90;
+        --open: #f3f5f0;
+        --stake: #26302a;
+        --flag: #e0540e;
+        --accent: #c2470a;
+        --accent-ink: #ffffff;
+        --mine: #1b231d;
+        --glint: #f3f5f0;
+        --boom: #f4b9a4;
+        --focus: #1d63d6;
+        --good: #1f7a36;
+        --bad: #bf2a21;
+        --n1: #1e5ccb;
+        --n2: #237a37;
+        --n3: #cc2c24;
+        --n4: #252f78;
+        --n5: #86291e;
+        --n6: #0f7c7b;
+        --n7: #1b231d;
+        --n8: #66706a;
+        --f-display: "Saira Stencil One", "Arial Narrow", Impact, sans-serif;
+        --f-ui:
+          "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto,
+          sans-serif;
+        --f-mono:
+          "Martian Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #111612;
+          --surface: #182019;
+          --ink: #e3eae2;
+          --muted: #95a398;
+          --line: #2b352d;
+          --field: #0b0f0c;
+          --tile: #3b4c3e;
+          --tile-hi: #4e624f;
+          --tile-lo: #29362b;
+          --tile-hover: #44584a;
+          --open: #1c241e;
+          --stake: #dce4da;
+          --flag: #ff7a33;
+          --accent: #ff7a33;
+          --accent-ink: #1a0d05;
+          --mine: #e3eae2;
+          --glint: #1c241e;
+          --boom: #6e2a1b;
+          --focus: #79aeff;
+          --good: #6ccb7e;
+          --bad: #ff7466;
+          --n1: #7aafff;
+          --n2: #6ccb7e;
+          --n3: #ff7466;
+          --n4: #b0b7ff;
+          --n5: #e9a486;
+          --n6: #5ed3cf;
+          --n7: #e3eae2;
+          --n8: #9aa59d;
+          color-scheme: dark;
+        }
+      }
+      :root[data-theme="dark"] {
+        --bg: #111612;
+        --surface: #182019;
+        --ink: #e3eae2;
+        --muted: #95a398;
+        --line: #2b352d;
+        --field: #0b0f0c;
+        --tile: #3b4c3e;
+        --tile-hi: #4e624f;
+        --tile-lo: #29362b;
+        --tile-hover: #44584a;
+        --open: #1c241e;
+        --stake: #dce4da;
+        --flag: #ff7a33;
+        --accent: #ff7a33;
+        --accent-ink: #1a0d05;
+        --mine: #e3eae2;
+        --glint: #1c241e;
+        --boom: #6e2a1b;
+        --focus: #79aeff;
+        --good: #6ccb7e;
+        --bad: #ff7466;
+        --n1: #7aafff;
+        --n2: #6ccb7e;
+        --n3: #ff7466;
+        --n4: #b0b7ff;
+        --n5: #e9a486;
+        --n6: #5ed3cf;
+        --n7: #e3eae2;
+        --n8: #9aa59d;
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--f-ui);
+        font-size: 15px;
+        line-height: 1.5;
+        padding-left: max(16px, env(safe-area-inset-left, 0px));
+        padding-right: max(16px, env(safe-area-inset-right, 0px));
+        padding-block: 28px 40px;
+      }
+      .wrap {
+        max-width: 1000px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+      header {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .eyebrow {
+        font: 600 11px/1.2 var(--f-mono);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 0;
+      }
+      h1 {
+        font-family: var(--f-display);
+        font-weight: 400;
+        font-size: clamp(34px, 6.4vw, 56px);
+        line-height: 1;
+        margin: 0;
+        letter-spacing: 0.01em;
+        text-wrap: balance;
+      }
+      h1 span {
+        color: var(--accent);
+      }
+      .lede {
+        margin: 2px 0 0;
+        color: var(--muted);
+        max-width: 62ch;
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 14px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .seg {
+        display: inline-flex;
+        flex-wrap: wrap;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        padding: 3px;
+        gap: 2px;
+      }
+      .seg button {
+        font: 500 13px/1 var(--f-ui);
+        color: var(--muted);
+        background: transparent;
+        border: 0;
+        border-radius: 6px;
+        padding: 9px 12px;
+        cursor: pointer;
+      }
+      .seg button:hover {
+        color: var(--ink);
+      }
+      .seg button[aria-pressed="true"] {
+        background: var(--ink);
+        color: var(--bg);
+      }
+      .seg button:focus-visible,
+      .btn:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
+      }
+
+      .panel {
+        align-self: center;
+        max-width: 100%;
+        min-width: min(100%, 340px);
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .hud {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .readout {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 62px;
+      }
+      .readout.right {
+        align-items: flex-end;
+      }
+      .readout .lbl {
+        font: 600 10px/1 var(--f-mono);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .readout .val {
+        font: 800 22px/1 var(--f-mono);
+        font-variant-numeric: tabular-nums;
+        color: var(--ink);
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+      .btn {
+        font: 600 13px/1 var(--f-ui);
+        border-radius: 8px;
+        padding: 10px 14px;
+        cursor: pointer;
+        border: 1px solid var(--line);
+        background: var(--bg);
+        color: var(--ink);
+      }
+      .btn:hover:not(:disabled) {
+        border-color: var(--muted);
+      }
+      .btn.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-ink);
+      }
+      .btn.primary:hover {
+        filter: brightness(1.06);
+      }
+      .btn:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+
+      .board-scroll {
+        overflow-x: auto;
+        max-width: 100%;
+        min-width: 0;
+      }
+      .board {
+        --cell: 32px;
+        --gap: 2px;
+        --cols: 9;
+        display: grid;
+        grid-template-columns: repeat(var(--cols), var(--cell));
+        grid-auto-rows: var(--cell);
+        gap: var(--gap);
+        padding: 2px;
+        width: max-content;
+        margin: 0 auto;
+        background: var(--field);
+        border-radius: 6px;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+        transition: opacity 0.15s;
+      }
+      .board.busy {
+        opacity: 0.6;
+        cursor: progress;
+      }
+      .cell {
+        appearance: none;
+        border: 0;
+        margin: 0;
+        padding: 0;
+        width: var(--cell);
+        height: var(--cell);
+        display: grid;
+        place-items: center;
+        border-radius: 3px;
+        background: var(--tile);
+        box-shadow:
+          inset 0 2px 0 var(--tile-hi),
+          inset 0 -2px 0 var(--tile-lo);
+        font-family: var(--f-mono);
+        font-weight: 800;
+        font-size: calc(var(--cell) * 0.5);
+        line-height: 1;
+        color: var(--ink);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+      }
+      @media (hover: hover) {
+        .cell.covered:hover {
+          background: var(--tile-hover);
+        }
+      }
+      .cell.open {
+        background: var(--open);
+        box-shadow: none;
+        border-radius: 2px;
+        cursor: default;
+      }
+      .cell.num {
+        cursor: pointer;
+      }
+      .cell > svg {
+        grid-area: 1/1;
+        width: 64%;
+        height: 64%;
+        display: block;
+      }
+      .cell.boom {
+        background: var(--boom);
+      }
+      .cell:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: -2px;
+        position: relative;
+        z-index: 1;
+      }
+      .cell.hint {
+        outline: 3px solid var(--focus);
+        outline-offset: -3px;
+        position: relative;
+        z-index: 1;
+        animation: pulse 1s ease-in-out 3;
+      }
+      @keyframes pulse {
+        50% {
+          outline-offset: -7px;
+        }
+      }
+      .cell[data-n="1"] {
+        color: var(--n1);
+      }
+      .cell[data-n="2"] {
+        color: var(--n2);
+      }
+      .cell[data-n="3"] {
+        color: var(--n3);
+      }
+      .cell[data-n="4"] {
+        color: var(--n4);
+      }
+      .cell[data-n="5"] {
+        color: var(--n5);
+      }
+      .cell[data-n="6"] {
+        color: var(--n6);
+      }
+      .cell[data-n="7"] {
+        color: var(--n7);
+      }
+      .cell[data-n="8"] {
+        color: var(--n8);
+      }
+
+      .status-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 14px;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+      }
+      .status {
+        margin: 0;
+        text-align: center;
+        max-width: 62ch;
+      }
+      .status.win {
+        color: var(--good);
+        font-weight: 600;
+      }
+      .status.bad {
+        color: var(--bad);
+        font-weight: 600;
+      }
+      .meta {
+        margin: 0;
+        font: 500 11px/1.5 var(--f-mono);
+        color: var(--muted);
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .help {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 14px 20px;
+        border-top: 1px solid var(--line);
+        padding-top: 18px;
+      }
+      .help div {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+      }
+      .help b {
+        font: 600 11px/1.3 var(--f-mono);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .help p {
+        margin: 0;
+      }
+
+      @media (max-width: 520px) {
+        body {
+          padding-block: 20px 32px;
+        }
+        .panel {
+          padding: 8px;
+          border-radius: 10px;
+        }
+        .readout .val {
+          font-size: 19px;
+        }
+        .btn {
+          padding: 9px 11px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .cell.hint {
+          animation: none;
+        }
+        .board {
+          transition: none;
+        }
+      }
+    </style>
+
+    <main class="wrap">
+      <header>
+        <p class="eyebrow">Solver-checked boards</p>
+        <h1>No-Guess <span>Minesweeper</span></h1>
+        <p class="lede">
+          After your first click, a solver plays the board using only the
+          numbers. If it would ever need a coin flip, the board is rebuilt
+          before you see it. You will never face a 50/50.
+        </p>
+      </header>
+
+      <div class="controls">
+        <div class="seg" id="diff" role="group" aria-label="Difficulty">
+          <button type="button" data-k="beginner">Beginner</button>
+          <button type="button" data-k="intermediate">Intermediate</button>
+          <button type="button" data-k="expert">Expert</button>
+        </div>
+        <div class="seg" id="mode" role="group" aria-label="Tap action">
+          <button type="button" data-m="dig" aria-pressed="true">Dig</button>
+          <button type="button" data-m="flag" aria-pressed="false">Flag</button>
+        </div>
+      </div>
+
+      <section class="panel" aria-label="Game">
+        <div class="hud">
+          <div class="readout">
+            <span class="lbl">Mines</span
+            ><span class="val" id="mines">010</span>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn primary" id="fresh">
+              New board
+            </button>
+            <button type="button" class="btn" id="hint">Hint</button>
+          </div>
+          <div class="readout right">
+            <span class="lbl">Time</span><span class="val" id="time">000</span>
+          </div>
+        </div>
+        <div class="board-scroll">
+          <div id="board" class="board" role="group"></div>
+        </div>
+      </section>
+
+      <div class="status-row">
+        <p id="status" class="status" aria-live="polite">
+          Click any square to start. The first click always opens an area.
+        </p>
+        <button type="button" class="btn" id="retry" hidden>
+          Retry this board
+        </button>
+      </div>
+      <p class="meta" id="meta">9 × 9 · 10 mines</p>
+
+      <section class="help" aria-label="How to play">
+        <div>
+          <b>Dig</b>
+          <p>
+            Click or tap a square. In Flag mode, a tap places a flag instead.
+          </p>
+        </div>
+        <div>
+          <b>Flag</b>
+          <p>Right-click, long-press, or press F on a focused square.</p>
+        </div>
+        <div>
+          <b>Clear around a number</b>
+          <p>
+            Click a number once all its mines are flagged to dig every other
+            square next to it.
+          </p>
+        </div>
+        <div>
+          <b>Hint</b>
+          <p>
+            Highlights a square that is provably safe from the numbers you can
+            see.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      /*ENGINE START*/
+      const Engine = (() => {
+        const cache = new Map();
+
+        function geom(R, C) {
+          const key = R + "x" + C;
+          if (cache.has(key)) return cache.get(key);
+          const N = R * C,
+            nb = new Array(N),
+            near = new Array(N);
+          for (let r = 0; r < R; r++)
+            for (let c = 0; c < C; c++) {
+              const a = [],
+                b = [];
+              for (let dr = -2; dr <= 2; dr++)
+                for (let dc = -2; dc <= 2; dc++) {
+                  if (!dr && !dc) continue;
+                  const rr = r + dr,
+                    cc = c + dc;
+                  if (rr < 0 || cc < 0 || rr >= R || cc >= C) continue;
+                  const j = rr * C + cc;
+                  b.push(j);
+                  if (Math.abs(dr) <= 1 && Math.abs(dc) <= 1) a.push(j);
+                }
+              nb[r * C + c] = a;
+              near[r * C + c] = b;
+            }
+          const g = { R, C, N, nb, near };
+          cache.set(key, g);
+          return g;
+        }
+
+        function counts(g, mines) {
+          const cnt = new Uint8Array(g.N);
+          for (let i = 0; i < g.N; i++)
+            if (mines[i]) for (const n of g.nb[i]) cnt[n]++;
+          return cnt;
+        }
+
+        // state: 0 unknown, 1 open, 2 deduced mine.
+        // Returns Uint8Array marking new deductions (1 safe, 2 mine), or null if stuck.
+        // Uses only numbers on open squares, so it sees exactly what a player sees.
+        function deduce(g, cnt, state, M) {
+          const N = g.N,
+            nb = g.nb,
+            out = new Uint8Array(N);
+          const cons = [],
+            at = new Int32Array(N).fill(-1);
+          let found = false;
+
+          // Rule 1: a number whose remaining mines equal 0 or equal its unknown neighbours.
+          for (let i = 0; i < N; i++) {
+            if (state[i] !== 1 || cnt[i] === 0) continue;
+            const unk = [];
+            let fl = 0;
+            for (const n of nb[i]) {
+              const s = state[n];
+              if (s === 0) unk.push(n);
+              else if (s === 2) fl++;
+            }
+            if (!unk.length) continue;
+            const rem = cnt[i] - fl;
+            if (rem === 0) {
+              for (const u of unk) out[u] = 1;
+              found = true;
+            } else if (rem === unk.length) {
+              for (const u of unk) out[u] = 2;
+              found = true;
+            } else {
+              at[i] = cons.length;
+              cons.push({ i, unk, rem });
+            }
+          }
+          if (found) return out;
+
+          // Rule 2: overlapping pairs (covers the 1-1 and 1-2 patterns and subset logic).
+          const markA = new Int32Array(N),
+            markB = new Int32Array(N);
+          let sb = 0;
+          for (let a = 0; a < cons.length; a++) {
+            const A = cons[a],
+              sa = a + 1;
+            for (const u of A.unk) markA[u] = sa;
+            for (const j of g.near[A.i]) {
+              const b = at[j];
+              if (b <= a) continue;
+              const B = cons[b];
+              let shared = 0,
+                onlyB = 0;
+              for (const u of B.unk) {
+                if (markA[u] === sa) shared++;
+                else onlyB++;
+              }
+              if (!shared) continue;
+              const onlyA = A.unk.length - shared;
+              if (!onlyA && !onlyB) continue;
+              const d = A.rem - B.rem;
+              let aMines;
+              if (d === onlyA) aMines = true;
+              else if (-d === onlyB) aMines = false;
+              else continue;
+              sb++;
+              for (const u of B.unk) markB[u] = sb;
+              for (const u of A.unk)
+                if (markB[u] !== sb) out[u] = aMines ? 2 : 1;
+              for (const u of B.unk)
+                if (markA[u] !== sa) out[u] = aMines ? 1 : 2;
+              found = true;
+            }
+          }
+          if (found) return out;
+
+          // Rule 3: total mine count.
+          let known = 0,
+            unknown = 0;
+          for (let i = 0; i < N; i++) {
+            if (state[i] === 2) known++;
+            else if (state[i] === 0) unknown++;
+          }
+          const rem = M - known;
+          if (unknown && (rem === 0 || rem === unknown)) {
+            const v = rem === 0 ? 1 : 2;
+            for (let i = 0; i < N; i++) if (state[i] === 0) out[i] = v;
+            return out;
+          }
+          return null;
+        }
+
+        function solve(g, cnt, mines, M, start) {
+          const state = new Uint8Array(g.N),
+            stack = [];
+          let opened = 0;
+          const open = (i) => {
+            stack.push(i);
+            while (stack.length) {
+              const x = stack.pop();
+              if (state[x] !== 0) continue;
+              if (mines[x]) throw new Error("solver opened a mine");
+              state[x] = 1;
+              opened++;
+              if (cnt[x] === 0)
+                for (const n of g.nb[x]) if (state[n] === 0) stack.push(n);
+            }
+          };
+          open(start);
+          const target = g.N - M;
+          while (opened < target) {
+            const out = deduce(g, cnt, state, M);
+            if (!out) break;
+            for (let i = 0; i < g.N; i++) {
+              if (out[i] === 1) open(i);
+              else if (out[i] === 2) state[i] = 2;
+            }
+          }
+          return { ok: opened === target, state };
+        }
+
+        // Yields between solver runs so the page stays responsive.
+        function* generate(R, C, M, start) {
+          const g = geom(R, C),
+            N = g.N;
+          const excl = new Uint8Array(N);
+          excl[start] = 1;
+          for (const n of g.nb[start]) excl[n] = 1;
+          const pool = [];
+          for (let i = 0; i < N; i++) if (!excl[i]) pool.push(i);
+          let tries = 0,
+            moves = 0;
+          for (;;) {
+            tries++;
+            const mines = new Uint8Array(N),
+              p = pool.slice();
+            for (let k = 0; k < M; k++) {
+              const j = k + Math.floor(Math.random() * (p.length - k));
+              const t = p[k];
+              p[k] = p[j];
+              p[j] = t;
+              mines[p[k]] = 1;
+            }
+            // When the solver gets stuck, move one mine off the stuck edge into
+            // untouched ground and solve again from scratch.
+            for (let step = 0; step < 80; step++) {
+              const cnt = counts(g, mines);
+              const res = solve(g, cnt, mines, M, start);
+              if (res.ok) return { mines, cnt, tries, moves };
+              yield;
+              const st = res.state,
+                edgeMines = [],
+                inner = [];
+              for (let i = 0; i < N; i++) {
+                if (st[i] === 1) continue;
+                let edge = false;
+                for (const n of g.nb[i])
+                  if (st[n] === 1) {
+                    edge = true;
+                    break;
+                  }
+                if (edge) {
+                  if (st[i] === 0 && mines[i]) edgeMines.push(i);
+                } else if (!mines[i]) inner.push(i);
+              }
+              if (!edgeMines.length || !inner.length) break;
+              const a = edgeMines[Math.floor(Math.random() * edgeMines.length)];
+              const b = inner[Math.floor(Math.random() * inner.length)];
+              mines[a] = 0;
+              mines[b] = 1;
+              moves++;
+            }
+            yield;
+          }
+        }
+
+        // A provably safe square given only what is open now. Prefers squares near ref.
+        function hint(g, cnt, open, M, ref) {
+          const state = new Uint8Array(g.N);
+          for (let i = 0; i < g.N; i++) state[i] = open[i] ? 1 : 0;
+          for (;;) {
+            const out = deduce(g, cnt, state, M);
+            if (!out) return -1;
+            let bestI = -1,
+              bestD = Infinity;
+            const rr = Math.floor(ref / g.C),
+              rc = ref % g.C;
+            for (let i = 0; i < g.N; i++) {
+              if (out[i] !== 1) continue;
+              const d = Math.max(
+                Math.abs(Math.floor(i / g.C) - rr),
+                Math.abs((i % g.C) - rc),
+              );
+              if (d < bestD) {
+                bestD = d;
+                bestI = i;
+              }
+            }
+            if (bestI >= 0) return bestI;
+            let marked = false;
+            for (let i = 0; i < g.N; i++)
+              if (out[i] === 2) {
+                state[i] = 2;
+                marked = true;
+              }
+            if (!marked) return -1;
+          }
+        }
+
+        return { geom, counts, deduce, solve, generate, hint };
+      })();
+      /*ENGINE END*/
+
+      const DIFFS = {
+        beginner: { r: 9, c: 9, m: 10, name: "Beginner" },
+        intermediate: { r: 16, c: 16, m: 40, name: "Intermediate" },
+        expert: { r: 16, c: 30, m: 99, name: "Expert" },
+      };
+      const FLAG =
+        '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6.5 3v13.5M3.5 16.5h6.5" fill="none" stroke="var(--stake)" stroke-width="1.8" stroke-linecap="round"/><path d="M7.4 3.4l8.6 3.3-8.6 3.3z" fill="var(--flag)"/></svg>';
+      const MINE =
+        '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.6v14.8M2.6 10h14.8M4.8 4.8l10.4 10.4M15.2 4.8L4.8 15.2" fill="none" stroke="var(--mine)" stroke-width="1.7" stroke-linecap="round"/><circle cx="10" cy="10" r="5.1" fill="var(--mine)"/><circle cx="8.3" cy="8.3" r="1.35" fill="var(--glint)"/></svg>';
+      const CROSS =
+        '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 3.5l13 13M16.5 3.5l-13 13" fill="none" stroke="var(--bad)" stroke-width="2.4" stroke-linecap="round"/></svg>';
+
+      const $ = (s) => document.querySelector(s);
+      const els = {
+        wrap: $(".wrap"),
+        panel: $(".panel"),
+        board: $("#board"),
+        mines: $("#mines"),
+        time: $("#time"),
+        status: $("#status"),
+        meta: $("#meta"),
+        retry: $("#retry"),
+        hint: $("#hint"),
+        fresh: $("#fresh"),
+        diff: $("#diff"),
+        mode: $("#mode"),
+      };
+      let G = null,
+        cells = [],
+        mode = "dig",
+        focusIdx = 0,
+        genToken = 0,
+        tick = 0,
+        hintTimer = 0;
+      let best = load("nogs-best", {});
+
+      function load(k, d) {
+        try {
+          const v = localStorage.getItem(k);
+          return v == null ? d : JSON.parse(v);
+        } catch {
+          return d;
+        }
+      }
+      function save(k, v) {
+        try {
+          localStorage.setItem(k, JSON.stringify(v));
+        } catch {}
+      }
+      const fmt3 = (n) =>
+        n < 0
+          ? "-" + String(Math.min(-n, 99)).padStart(2, "0")
+          : String(Math.min(n, 999)).padStart(3, "0");
+
+      function layout(C) {
+        const cs = getComputedStyle(els.panel);
+        const avail =
+          els.wrap.clientWidth -
+          parseFloat(cs.paddingLeft) -
+          parseFloat(cs.paddingRight) -
+          6;
+        const max = C <= 9 ? 40 : C <= 16 ? 34 : 30;
+        let gap = 2,
+          size = Math.floor((avail - (C - 1) * gap) / C);
+        if (size < 22) {
+          gap = 1;
+          size = Math.floor((avail - (C - 1) * gap) / C);
+        }
+        return { size: Math.max(16, Math.min(max, size)), gap };
+      }
+      function sizeBoard() {
+        const { size, gap } = layout(G.C);
+        els.board.style.setProperty("--cell", size + "px");
+        els.board.style.setProperty("--gap", gap + "px");
+        els.board.style.setProperty("--cols", G.C);
+      }
+
+      function blank(key, R, C, M) {
+        const N = R * C;
+        return {
+          key,
+          R,
+          C,
+          M,
+          N,
+          g: Engine.geom(R, C),
+          mines: null,
+          cnt: null,
+          open: new Uint8Array(N),
+          flags: new Uint8Array(N),
+          openCount: 0,
+          flagCount: 0,
+          start: -1,
+          over: false,
+          won: false,
+          lost: false,
+          boom: -1,
+          elapsed: 0,
+          t0: 0,
+          hints: 0,
+          generating: false,
+          info: null,
+        };
+      }
+
+      function newGame(key) {
+        genToken++;
+        stopTimer();
+        if (!DIFFS[key]) key = "beginner";
+        const d = DIFFS[key];
+        let R = d.r,
+          C = d.c;
+        if (C > R && layout(C).size < 24) {
+          const t = R;
+          R = C;
+          C = t;
+        }
+        G = blank(key, R, C, d.m);
+        focusIdx = 0;
+        buildBoard();
+        updateHud();
+        setMeta();
+        syncControls();
+        setStatus(
+          "Click any square to start. The first click always opens an area.",
+        );
+        els.retry.hidden = true;
+      }
+
+      function buildBoard() {
+        sizeBoard();
+        const frag = document.createDocumentFragment();
+        cells = new Array(G.N);
+        for (let i = 0; i < G.N; i++) {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.dataset.i = i;
+          b.tabIndex = i === focusIdx ? 0 : -1;
+          cells[i] = b;
+          frag.appendChild(b);
+          paint(i);
+        }
+        els.board.replaceChildren(frag);
+        els.board.setAttribute(
+          "aria-label",
+          `Minefield, ${G.C} columns by ${G.R} rows`,
+        );
+      }
+
+      function paint(i) {
+        const el = cells[i],
+          { open, flags, mines, cnt } = G;
+        let cls = "cell",
+          html = "",
+          n = "",
+          desc;
+        if (G.lost && mines[i] && !flags[i]) {
+          cls += " open mine" + (i === G.boom ? " boom" : "");
+          html = MINE;
+          desc = i === G.boom ? "mine, exploded" : "mine";
+        } else if (open[i]) {
+          cls += " open";
+          const k = cnt[i];
+          if (k) {
+            cls += " num";
+            html = String(k);
+            n = String(k);
+            desc = k + (k === 1 ? " mine" : " mines") + " nearby";
+          } else desc = "clear";
+        } else if (flags[i]) {
+          const bad = G.lost && !mines[i];
+          cls += " covered flag";
+          html = bad ? FLAG + CROSS : FLAG;
+          desc = bad ? "wrong flag" : "flagged";
+        } else {
+          cls += " covered";
+          desc = "covered";
+        }
+        const sig = cls + "|" + html;
+        if (el._sig === sig) return;
+        el._sig = sig;
+        el.className = cls;
+        el.innerHTML = html;
+        if (n) el.dataset.n = n;
+        else delete el.dataset.n;
+        el.setAttribute(
+          "aria-label",
+          `Row ${Math.floor(i / G.C) + 1}, column ${(i % G.C) + 1}: ${desc}`,
+        );
+      }
+      function paintAll() {
+        for (let i = 0; i < G.N; i++) paint(i);
+      }
+
+      function updateHud() {
+        els.mines.textContent = fmt3(G.M - G.flagCount);
+        els.time.textContent = fmt3(Math.floor(G.elapsed));
+        els.hint.disabled = G.over;
+      }
+      function setMeta() {
+        let t = `${G.C} × ${G.R} · ${G.M} mines`;
+        if (G.info) t += ` · solver-checked in ${G.info.ms} ms`;
+        if (best[G.key] != null) t += ` · best ${best[G.key]} s`;
+        els.meta.textContent = t;
+      }
+      function setStatus(text, tone) {
+        els.status.textContent = text;
+        els.status.className = "status" + (tone ? " " + tone : "");
+      }
+      function syncControls() {
+        els.diff
+          .querySelectorAll("button")
+          .forEach((b) =>
+            b.setAttribute("aria-pressed", String(b.dataset.k === G.key)),
+          );
+        els.mode
+          .querySelectorAll("button")
+          .forEach((b) =>
+            b.setAttribute("aria-pressed", String(b.dataset.m === mode)),
+          );
+      }
+
+      function startTimer(fromSec) {
+        stopTimer();
+        G.t0 = performance.now() - fromSec * 1000;
+        G.elapsed = fromSec;
+        tick = setInterval(() => {
+          G.elapsed = (performance.now() - G.t0) / 1000;
+          updateHud();
+        }, 250);
+      }
+      function stopTimer() {
+        if (tick) {
+          clearInterval(tick);
+          tick = 0;
+          if (G && G.t0) G.elapsed = (performance.now() - G.t0) / 1000;
+        }
+      }
+
+      function begin(i) {
+        G.generating = true;
+        G.start = i;
+        const token = ++genToken,
+          t = performance.now();
+        els.board.classList.add("busy");
+        const slow = setTimeout(() => {
+          if (token === genToken)
+            setStatus("Checking the board with the solver…");
+        }, 150);
+        const it = Engine.generate(G.R, G.C, G.M, i);
+        (function step() {
+          if (token !== genToken) {
+            clearTimeout(slow);
+            return;
+          }
+          const t1 = performance.now();
+          let r;
+          do {
+            r = it.next();
+          } while (!r.done && performance.now() - t1 < 20);
+          if (!r.done) {
+            setTimeout(step, 0);
+            return;
+          }
+          clearTimeout(slow);
+          els.board.classList.remove("busy");
+          G.generating = false;
+          G.mines = r.value.mines;
+          G.cnt = r.value.cnt;
+          G.info = { ms: Math.max(1, Math.round(performance.now() - t)) };
+          setMeta();
+          startTimer(0);
+          openFrom(i);
+          setStatus(
+            "No guessing needed. Every safe square can be worked out from the numbers.",
+          );
+          checkWin();
+        })();
+      }
+
+      function openFrom(i) {
+        const { g, mines, cnt, open, flags } = G;
+        if (mines[i]) {
+          lose(i);
+          return false;
+        }
+        const stack = [i];
+        while (stack.length) {
+          const x = stack.pop();
+          if (open[x] || flags[x]) continue;
+          open[x] = 1;
+          G.openCount++;
+          paint(x);
+          if (cnt[x] === 0)
+            for (const n of g.nb[x]) if (!open[n] && !flags[n]) stack.push(n);
+        }
+        return true;
+      }
+
+      function primary(i) {
+        if (!G || G.over || G.generating) return;
+        if (!G.mines) {
+          begin(i);
+          return;
+        }
+        if (G.open[i]) {
+          chord(i);
+          return;
+        }
+        if (mode === "flag") {
+          toggleFlag(i);
+          return;
+        }
+        if (G.flags[i]) return;
+        if (openFrom(i)) checkWin();
+      }
+
+      function chord(i) {
+        const { g, cnt, open, flags, mines } = G;
+        const k = cnt[i];
+        if (!k) return;
+        let f = 0;
+        const todo = [];
+        for (const n of g.nb[i]) {
+          if (flags[n]) f++;
+          else if (!open[n]) todo.push(n);
+        }
+        if (f !== k || !todo.length) return;
+        for (const n of todo)
+          if (mines[n]) {
+            lose(n);
+            return;
+          }
+        for (const n of todo) openFrom(n);
+        checkWin();
+      }
+
+      function toggleFlag(i) {
+        if (!G || G.over || G.generating || !G.mines || G.open[i]) return false;
+        G.flags[i] ^= 1;
+        G.flagCount += G.flags[i] ? 1 : -1;
+        paint(i);
+        updateHud();
+        return true;
+      }
+
+      function lose(i) {
+        stopTimer();
+        G.over = true;
+        G.lost = true;
+        G.boom = i;
+        paintAll();
+        updateHud();
+        setStatus(
+          "That square was a mine, and the numbers could have shown it. Retry this board or start a new one.",
+          "bad",
+        );
+        els.retry.hidden = false;
+      }
+
+      function checkWin() {
+        if (G.over || G.openCount !== G.N - G.M) return;
+        stopTimer();
+        G.over = true;
+        G.won = true;
+        for (let i = 0; i < G.N; i++) if (G.mines[i]) G.flags[i] = 1;
+        G.flagCount = G.M;
+        paintAll();
+        updateHud();
+        const secs = Math.max(1, Math.round(G.elapsed));
+        const name = DIFFS[G.key].name;
+        let msg;
+        if (G.hints)
+          msg = `Board cleared in ${secs} s with ${G.hints} hint${G.hints > 1 ? "s" : ""}. Hint-free runs count for your best time.`;
+        else if (best[G.key] == null || secs < best[G.key]) {
+          best[G.key] = secs;
+          save("nogs-best", best);
+          msg = `Board cleared in ${secs} s. New best for ${name}.`;
+        } else
+          msg = `Board cleared in ${secs} s. Your ${name} best is ${best[G.key]} s.`;
+        setStatus(msg, "win");
+        setMeta();
+      }
+
+      function retry() {
+        if (!G || !G.mines) return;
+        G.open.fill(0);
+        G.flags.fill(0);
+        G.openCount = 0;
+        G.flagCount = 0;
+        G.hints = 0;
+        G.over = false;
+        G.won = false;
+        G.lost = false;
+        G.boom = -1;
+        paintAll();
+        openFrom(G.start);
+        startTimer(0);
+        updateHud();
+        els.retry.hidden = true;
+        setStatus(
+          "Same board, same first square. Every safe square can be worked out from the numbers.",
+        );
+      }
+
+      function giveHint() {
+        if (!G || G.over || G.generating) return;
+        if (!G.mines) {
+          setStatus(
+            "Click any square to start. The first click is always safe.",
+          );
+          return;
+        }
+        let t = Engine.hint(G.g, G.cnt, G.open, G.M, focusIdx);
+        if (t < 0)
+          for (let j = 0; j < G.N; j++)
+            if (!G.open[j] && !G.mines[j]) {
+              t = j;
+              break;
+            }
+        if (t < 0) return;
+        G.hints++;
+        cells.forEach((c) => c.classList.remove("hint"));
+        clearTimeout(hintTimer);
+        const el = cells[t];
+        el.classList.add("hint");
+        setFocus(t, true);
+        el.scrollIntoView({ block: "nearest", inline: "nearest" });
+        hintTimer = setTimeout(() => el.classList.remove("hint"), 3200);
+        setStatus(
+          G.flags[t]
+            ? "The highlighted square is safe, so its flag is wrong."
+            : "The highlighted square is safe to dig. Check the numbers around it to see why.",
+        );
+      }
+
+      function setFocus(j, doFocus) {
+        if (cells[focusIdx]) cells[focusIdx].tabIndex = -1;
+        focusIdx = j;
+        cells[j].tabIndex = 0;
+        if (doFocus) cells[j].focus({ preventScroll: true });
+      }
+
+      function snapshot() {
+        if (!G) return {};
+        const elapsed = tick ? (performance.now() - G.t0) / 1000 : G.elapsed;
+        return {
+          mode,
+          game: {
+            key: G.key,
+            R: G.R,
+            C: G.C,
+            M: G.M,
+            start: G.start,
+            mines: G.mines ? Array.from(G.mines) : null,
+            open: Array.from(G.open),
+            flags: Array.from(G.flags),
+            over: G.over,
+            won: G.won,
+            lost: G.lost,
+            boom: G.boom,
+            elapsed,
+            hints: G.hints,
+            info: G.info,
+          },
+        };
+      }
+
+      function restore(s) {
+        G = blank(s.key, s.R, s.C, s.M);
+        G.mines = Uint8Array.from(s.mines);
+        G.cnt = Engine.counts(G.g, G.mines);
+        G.open = Uint8Array.from(s.open);
+        G.flags = Uint8Array.from(s.flags);
+        G.openCount = G.open.reduce((a, b) => a + b, 0);
+        G.flagCount = G.flags.reduce((a, b) => a + b, 0);
+        Object.assign(G, {
+          start: s.start,
+          over: s.over,
+          won: s.won,
+          lost: s.lost,
+          boom: s.boom,
+          elapsed: s.elapsed || 0,
+          hints: s.hints || 0,
+          info: s.info || null,
+        });
+        focusIdx = 0;
+        buildBoard();
+        paintAll();
+        updateHud();
+        setMeta();
+        syncControls();
+        els.retry.hidden = !G.lost;
+        if (!G.over) {
+          startTimer(G.elapsed);
+          setStatus(
+            "No guessing needed. Every safe square can be worked out from the numbers.",
+          );
+        } else if (G.lost)
+          setStatus(
+            "That square was a mine, and the numbers could have shown it. Retry this board or start a new one.",
+            "bad",
+          );
+        else
+          setStatus(
+            `Board cleared in ${Math.max(1, Math.round(G.elapsed))} s.`,
+            "win",
+          );
+      }
+
+      function wire() {
+        let press = null,
+          suppress = false,
+          lastType = "mouse";
+        const cellOf = (e) => e.target.closest && e.target.closest(".cell");
+        const cancelPress = () => {
+          if (press) {
+            clearTimeout(press.t);
+            press = null;
+          }
+        };
+
+        els.board.addEventListener("pointerdown", (e) => {
+          lastType = e.pointerType;
+          const el = cellOf(e);
+          if (!el || e.pointerType === "mouse") return;
+          const i = +el.dataset.i;
+          cancelPress();
+          press = {
+            x: e.clientX,
+            y: e.clientY,
+            t: setTimeout(() => {
+              press = null;
+              if (toggleFlag(i)) {
+                suppress = true;
+                try {
+                  navigator.vibrate && navigator.vibrate(12);
+                } catch {}
+              }
+            }, 380),
+          };
+        });
+        els.board.addEventListener("pointermove", (e) => {
+          if (
+            press &&
+            Math.hypot(e.clientX - press.x, e.clientY - press.y) > 10
+          )
+            cancelPress();
+        });
+        ["pointerup", "pointercancel", "pointerleave"].forEach((t) =>
+          els.board.addEventListener(t, cancelPress),
+        );
+        els.board.addEventListener("click", (e) => {
+          const el = cellOf(e);
+          if (!el) return;
+          if (suppress) {
+            suppress = false;
+            return;
+          }
+          const i = +el.dataset.i;
+          setFocus(i, false);
+          primary(i);
+        });
+        els.board.addEventListener("contextmenu", (e) => {
+          const el = cellOf(e);
+          if (!el) return;
+          e.preventDefault();
+          if (lastType === "touch" || lastType === "pen") return;
+          toggleFlag(+el.dataset.i);
+        });
+        els.board.addEventListener("keydown", (e) => {
+          const el = cellOf(e);
+          if (!el || !G) return;
+          const i = +el.dataset.i,
+            C = G.C;
+          let j = -1;
+          switch (e.key) {
+            case "ArrowUp":
+              j = i >= C ? i - C : i;
+              break;
+            case "ArrowDown":
+              j = i + C < G.N ? i + C : i;
+              break;
+            case "ArrowLeft":
+              j = i % C ? i - 1 : i;
+              break;
+            case "ArrowRight":
+              j = i % C < C - 1 ? i + 1 : i;
+              break;
+            case "f":
+            case "F":
+              e.preventDefault();
+              toggleFlag(i);
+              return;
+            default:
+              return;
+          }
+          e.preventDefault();
+          setFocus(j, true);
+        });
+
+        els.diff.addEventListener("click", (e) => {
+          const b = e.target.closest("button");
+          if (!b) return;
+          save("nogs-diff", b.dataset.k);
+          newGame(b.dataset.k);
+        });
+        els.mode.addEventListener("click", (e) => {
+          const b = e.target.closest("button");
+          if (!b) return;
+          mode = b.dataset.m;
+          syncControls();
+        });
+        els.fresh.addEventListener("click", () =>
+          newGame(G ? G.key : "beginner"),
+        );
+        els.hint.addEventListener("click", giveHint);
+        els.retry.addEventListener("click", retry);
+
+        let rz = 0;
+        window.addEventListener("resize", () => {
+          clearTimeout(rz);
+          rz = setTimeout(() => G && sizeBoard(), 80);
+        });
+      }
+
+      function start(data) {
+        wire();
+        if (data && data.mode) mode = data.mode;
+        const s = data && data.game;
+        if (s && s.mines) {
+          try {
+            restore(s);
+            return;
+          } catch {}
+        }
+        newGame(load("nogs-diff", "beginner"));
+      }
+
+      if (window.claude && window.claude.hot && window.claude.hot.snapshot)
+        window.claude.hot.snapshot(snapshot);
+      if (window.claude?.hot?.ready) window.claude.hot.ready(start);
+      else start(window.claude?.hot?.data ?? {});
+    </script>
+  </body>
+</html>

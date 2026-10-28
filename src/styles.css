@@ -1,0 +1,941 @@
+/* Layout: one centred column. Title block with tool icons, controls row, then an instrument-plate panel holding the HUD, the minefield and a footer of board tools. */
+:root {
+  --bg: #e4e9e1;
+  --surface: #f3f5f0;
+  --ink: #1b231d;
+  --muted: #56635a;
+  --line: #c6cfc3;
+  --field: #aebba9;
+  --tile: #8da285;
+  --tile-hi: #a8bb9f;
+  --tile-lo: #6d8266;
+  --tile-hover: #98ad90;
+  --open: #f3f5f0;
+  --stake: #26302a;
+  --flag: #e0540e;
+  --accent: #c2470a;
+  --accent-ink: #ffffff;
+  --pair: #7a3cc4;
+  --mine: #1b231d;
+  --glint: #f3f5f0;
+  --boom: #f4b9a4;
+  --focus: #1d63d6;
+  --good: #1f7a36;
+  --bad: #bf2a21;
+  --n1: #1e5ccb;
+  --n2: #237a37;
+  --n3: #cc2c24;
+  --n4: #252f78;
+  --n5: #86291e;
+  --n6: #0f7c7b;
+  --n7: #1b231d;
+  --n8: #66706a;
+  --f-display: "Saira Stencil One", "Arial Narrow", Impact, sans-serif;
+  --f-ui:
+    "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+  --f-mono:
+    "Martian Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111612;
+    --surface: #182019;
+    --ink: #e3eae2;
+    --muted: #95a398;
+    --line: #2b352d;
+    --field: #0b0f0c;
+    --tile: #3b4c3e;
+    --tile-hi: #4e624f;
+    --tile-lo: #29362b;
+    --tile-hover: #44584a;
+    --open: #1c241e;
+    --stake: #dce4da;
+    --flag: #ff7a33;
+    --accent: #ff7a33;
+    --accent-ink: #1a0d05;
+    --pair: #c49bff;
+    --mine: #e3eae2;
+    --glint: #1c241e;
+    --boom: #6e2a1b;
+    --focus: #79aeff;
+    --good: #6ccb7e;
+    --bad: #ff7466;
+    --n1: #7aafff;
+    --n2: #6ccb7e;
+    --n3: #ff7466;
+    --n4: #b0b7ff;
+    --n5: #e9a486;
+    --n6: #5ed3cf;
+    --n7: #e3eae2;
+    --n8: #9aa59d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111612;
+  --surface: #182019;
+  --ink: #e3eae2;
+  --muted: #95a398;
+  --line: #2b352d;
+  --field: #0b0f0c;
+  --tile: #3b4c3e;
+  --tile-hi: #4e624f;
+  --tile-lo: #29362b;
+  --tile-hover: #44584a;
+  --open: #1c241e;
+  --stake: #dce4da;
+  --flag: #ff7a33;
+  --accent: #ff7a33;
+  --accent-ink: #1a0d05;
+  --pair: #c49bff;
+  --mine: #e3eae2;
+  --glint: #1c241e;
+  --boom: #6e2a1b;
+  --focus: #79aeff;
+  --good: #6ccb7e;
+  --bad: #ff7466;
+  --n1: #7aafff;
+  --n2: #6ccb7e;
+  --n3: #ff7466;
+  --n4: #b0b7ff;
+  --n5: #e9a486;
+  --n6: #5ed3cf;
+  --n7: #e3eae2;
+  --n8: #9aa59d;
+  color-scheme: dark;
+}
+* {
+  box-sizing: border-box;
+}
+[hidden] {
+  display: none !important;
+}
+html {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  transition:
+    background-color 0.25s,
+    color 0.25s;
+  color: var(--ink);
+  font-family: var(--f-ui);
+  font-size: 15px;
+  line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 40px;
+}
+.wrap {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.titles {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.tools {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.eyebrow {
+  font: 600 11px/1.2 var(--f-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0;
+}
+h1 {
+  font-family: var(--f-display);
+  font-weight: 400;
+  font-size: clamp(34px, 6.4vw, 56px);
+  line-height: 1;
+  margin: 0;
+  letter-spacing: 0.01em;
+  text-wrap: balance;
+}
+h1 span {
+  color: var(--accent);
+}
+.lede {
+  margin: 2px 0 0;
+  color: var(--muted);
+  max-width: 62ch;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: center;
+  justify-content: space-between;
+}
+.group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.group-lbl {
+  font: 600 10px/1 var(--f-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.seg {
+  position: relative;
+  display: inline-flex;
+  flex-wrap: wrap;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 3px;
+  gap: 2px;
+}
+.seg button {
+  position: relative;
+  z-index: 1;
+  font: 500 13px/1 var(--f-ui);
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  padding: 9px 12px;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    transform 0.12s;
+}
+.seg button:hover {
+  color: var(--ink);
+}
+.seg button:active {
+  transform: scale(0.96);
+}
+.seg button[aria-pressed="true"] {
+  color: var(--bg);
+}
+/* Without the sliding thumb (before scripts run), the pressed button is filled. */
+.seg:not(.has-thumb) button[aria-pressed="true"] {
+  background: var(--ink);
+}
+.seg .thumb {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 6px;
+  background: var(--ink);
+  pointer-events: none;
+  transition:
+    transform 0.28s cubic-bezier(0.3, 0.8, 0.2, 1),
+    width 0.28s cubic-bezier(0.3, 0.8, 0.2, 1),
+    height 0.28s cubic-bezier(0.3, 0.8, 0.2, 1),
+    background-color 0.25s;
+}
+.seg button:focus-visible,
+.btn:focus-visible,
+.icon-btn:focus-visible,
+.field input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.panel {
+  align-self: center;
+  max-width: 100%;
+  min-width: min(100%, 340px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.play {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+/* The HUD stays in view while scrolling a tall board on a phone. */
+.hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  margin: -14px -14px 0;
+  padding: 14px 14px 0;
+  border-radius: 12px 12px 0 0;
+  background: var(--surface);
+}
+.readout .val {
+  display: inline-block;
+}
+.readout {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 62px;
+}
+.readout.right {
+  align-items: flex-end;
+}
+.readout .lbl {
+  font: 600 10px/1 var(--f-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.readout .val {
+  font: 800 22px/1 var(--f-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.actions {
+  display: flex;
+  gap: 8px;
+}
+.btn {
+  font: 600 13px/1 var(--f-ui);
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  transition:
+    border-color 0.15s,
+    background-color 0.15s,
+    transform 0.12s,
+    opacity 0.15s;
+}
+.btn:hover:not(:disabled) {
+  border-color: var(--muted);
+}
+.btn:active:not(:disabled),
+.icon-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.btn.primary:hover {
+  filter: brightness(1.06);
+}
+.btn:disabled,
+.icon-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.icon-btn {
+  width: 38px;
+  height: 38px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    transform 0.12s,
+    opacity 0.15s;
+}
+.icon-btn:hover:not(:disabled) {
+  border-color: var(--muted);
+}
+.icon-btn[aria-pressed="true"] {
+  color: var(--accent);
+}
+.icon-btn svg,
+.btn svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+.hud .icon-btn {
+  background: var(--bg);
+}
+
+.stage {
+  position: relative;
+}
+.board-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  min-width: 0;
+  touch-action: pan-x pan-y;
+}
+.board {
+  --cell: 32px;
+  --gap: 2px;
+  --cols: 9;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--cell));
+  grid-auto-rows: var(--cell);
+  gap: var(--gap);
+  padding: 2px;
+  width: max-content;
+  margin: 0 auto;
+  background: var(--field);
+  border-radius: 6px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.board.busy {
+  cursor: progress;
+}
+.board.paused .cell {
+  visibility: hidden;
+}
+.pause-ov {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  text-align: center;
+  color: var(--muted);
+  font: 600 12px/1.3 var(--f-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+/* Squares are fixed-size and contained, so changing one never re-lays-out the board. */
+.cell {
+  position: relative;
+  contain: strict;
+  appearance: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  width: var(--cell);
+  height: var(--cell);
+  display: grid;
+  place-items: center;
+  border-radius: 3px;
+  background: var(--tile);
+  box-shadow:
+    inset 0 2px 0 var(--tile-hi),
+    inset 0 -2px 0 var(--tile-lo);
+  font-family: var(--f-mono);
+  font-weight: 800;
+  font-size: calc(var(--cell) * 0.5);
+  line-height: 1;
+  color: var(--ink);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  transition: background-color 0.09s;
+}
+@media (hover: hover) {
+  .cell.covered:hover {
+    background: var(--tile-hover);
+  }
+  .board.flag-mode .cell.covered:hover {
+    cursor: cell;
+  }
+}
+/* Pressed: the square sinks the moment the pointer goes down. */
+.cell.covered.pressed {
+  background: var(--tile-lo);
+  box-shadow: inset 0 2px 3px rgb(0 0 0 / 0.22);
+  transition: none;
+}
+.board.busy .cell.pressed {
+  animation: think 0.7s ease-in-out infinite alternate;
+}
+@keyframes think {
+  to {
+    background: var(--tile);
+  }
+}
+/* Long-press: a ring fills before the flag lands. */
+.cell.holding::after {
+  content: "";
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  border: 2px solid var(--flag);
+  animation: hold 0.27s linear both;
+}
+@keyframes hold {
+  from {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+}
+.cell.open {
+  background: var(--open);
+  box-shadow: none;
+  border-radius: 2px;
+  cursor: default;
+}
+.cell.num {
+  cursor: pointer;
+}
+.cell > svg {
+  grid-area: 1/1;
+  width: 64%;
+  height: 64%;
+  display: block;
+}
+.cell.boom {
+  background: var(--boom);
+}
+.cell:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+  z-index: 1;
+}
+.cell.hint {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+  z-index: 1;
+  animation: pulse 1s ease-in-out 3;
+}
+@keyframes pulse {
+  50% {
+    outline-offset: -7px;
+  }
+}
+/* Explanation rings: orange for the deciding number, purple for its partner,
+   dashed for squares the explanation worked out first. */
+.cell.why-a {
+  box-shadow: inset 0 0 0 3px var(--accent);
+}
+.cell.why-b {
+  box-shadow: inset 0 0 0 3px var(--pair);
+}
+.cell.why-mine {
+  outline: 2px dashed var(--flag);
+  outline-offset: -4px;
+}
+.cell.why-safe {
+  outline: 2px dashed var(--good);
+  outline-offset: -4px;
+}
+.cell[data-n="1"] {
+  color: var(--n1);
+}
+.cell[data-n="2"] {
+  color: var(--n2);
+}
+.cell[data-n="3"] {
+  color: var(--n3);
+}
+.cell[data-n="4"] {
+  color: var(--n4);
+}
+.cell[data-n="5"] {
+  color: var(--n5);
+}
+.cell[data-n="6"] {
+  color: var(--n6);
+}
+.cell[data-n="7"] {
+  color: var(--n7);
+}
+.cell[data-n="8"] {
+  color: var(--n8);
+}
+
+.panel-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+.panel-foot .group {
+  gap: 6px;
+}
+.zoom {
+  display: inline-flex;
+  gap: 4px;
+}
+.zoom .icon-btn {
+  width: 34px;
+  height: 34px;
+}
+.zoom .btn {
+  padding: 9px 10px;
+}
+
+/* Messages sit right under the board, inside the panel, so explanations stay in view. */
+.status-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+}
+.status {
+  margin: 0;
+  text-align: center;
+  max-width: 60ch;
+  font-size: 14px;
+  text-wrap: pretty;
+}
+.status.win {
+  color: var(--good);
+  font-weight: 600;
+}
+.status.bad {
+  color: var(--bad);
+  font-weight: 600;
+}
+.status-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.result {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.chip {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+  min-width: 76px;
+}
+.chip .lbl,
+.tile .lbl {
+  font: 600 9.5px/1 var(--f-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.chip .val {
+  font: 700 15px/1.1 var(--f-mono);
+  font-variant-numeric: tabular-nums;
+}
+.meta {
+  margin: 0;
+  font: 500 11px/1.5 var(--f-mono);
+  color: var(--muted);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.replay {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+}
+.replay input[type="range"] {
+  flex: 1 1 160px;
+  max-width: 320px;
+  accent-color: var(--accent);
+}
+.rp-time {
+  font: 700 13px/1 var(--f-mono);
+  font-variant-numeric: tabular-nums;
+  min-width: 64px;
+}
+.replay .seg button {
+  padding: 8px 10px;
+}
+
+.help {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px 20px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+.help div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.help b {
+  font: 600 11px/1.3 var(--f-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.help p {
+  margin: 0;
+}
+kbd {
+  font: 600 11px/1 var(--f-mono);
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 2px 5px;
+  background: var(--surface);
+}
+
+dialog {
+  width: min(460px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 20px;
+}
+dialog.wide {
+  width: min(600px, calc(100vw - 32px));
+}
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.42);
+}
+dialog h2 {
+  font: 400 26px/1.1 var(--f-display);
+  margin: 0 0 8px;
+}
+dialog h3 {
+  font: 600 11px/1.3 var(--f-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 18px 0 8px;
+}
+dialog p {
+  margin: 0 0 10px;
+}
+.dlg-btns {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+.fields {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.field span {
+  font: 600 10px/1 var(--f-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.field input {
+  font: 600 15px/1 var(--f-mono);
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--ink);
+  min-width: 0;
+}
+.note {
+  font-size: 13px;
+  color: var(--muted);
+}
+.note.bad {
+  color: var(--bad);
+}
+.codebox {
+  display: flex;
+  gap: 8px;
+}
+.codebox .field {
+  flex: 1;
+}
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.tile {
+  border: 1px solid var(--line);
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tile .val {
+  font: 800 20px/1 var(--f-mono);
+  font-variant-numeric: tabular-nums;
+}
+.spark {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.spark .ax {
+  font: 500 10px var(--f-mono);
+  fill: var(--muted);
+}
+.spark .dot {
+  fill: var(--accent);
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+.spark .hit {
+  fill: transparent;
+  cursor: default;
+}
+.spark .hit:hover + .dot {
+  r: 6;
+}
+table.recent {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+table.recent th {
+  font: 600 9.5px/1.2 var(--f-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: right;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--line);
+}
+table.recent td {
+  text-align: right;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--line);
+}
+table.recent th:first-child,
+table.recent td:first-child {
+  text-align: left;
+}
+.table-wrap {
+  overflow-x: auto;
+}
+.confetti {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 50;
+}
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(20px, env(safe-area-inset-bottom, 0px));
+  translate: -50% 0;
+  z-index: 60;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  font: 600 13px/1.2 var(--f-ui);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.22);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  body {
+    padding-block: 20px 32px;
+  }
+  /* The pitch is repeated in the help section; the board matters more up top. */
+  .lede {
+    display: none;
+  }
+  .panel {
+    padding: 8px;
+    border-radius: 10px;
+  }
+  .hud {
+    margin: -8px -8px 0;
+    padding: 8px 8px 0;
+    border-radius: 10px 10px 0 0;
+  }
+  .readout .val {
+    font-size: 19px;
+  }
+  .btn {
+    padding: 9px 11px;
+  }
+  .fields,
+  .tiles {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  /* One compact row, so the sticky HUD covers as little of the board as possible. */
+  .play {
+    gap: 8px;
+  }
+  .hud {
+    flex-wrap: nowrap;
+    gap: 6px;
+    padding-bottom: 6px;
+  }
+  .readout {
+    min-width: 0;
+  }
+  .hud .actions {
+    gap: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cell.hint,
+  .cell.holding::after,
+  .board.busy .cell.pressed {
+    animation: none;
+  }
+  body,
+  .cell,
+  .btn,
+  .icon-btn,
+  .seg button,
+  .seg .thumb {
+    transition: none;
+  }
+}
